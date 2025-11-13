@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Client Web</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
+            max-height: 90vh;
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        #token-setup,
+        #server-selection,
+        #channel-selection {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #e0e0e0;
+            padding: 15px 0;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            width: 100%;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 1rem;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #666;
+            background-color: #363636;
+        }
+
+        input::placeholder {
+            color: #888;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #404040, #2d2d2d);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #4a4a4a, #363636);
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+            border-left: 4px solid #ff5252;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #388e3c, #2e7d32);
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+            border-left: 4px solid #4caf50;
+        }
+
+        #chat-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #chat-header {
+            background: linear-gradient(135deg, #2d2d2d, #1f1f1f);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+        }
+
+        #chat-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #e0e0e0;
+            font-weight: 400;
+        }
+
+        #back-to-channels-btn,
+        #back-to-servers-btn,
+        #settings-btn {
+            background: transparent;
+            border: 1px solid #555;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            margin-left: 5px;
+            color: #e0e0e0;
+        }
+
+        #back-to-channels-btn:hover,
+        #back-to-servers-btn:hover,
+        #settings-btn:hover {
+            background: #333;
+            border-color: #666;
+        }
+
+        #chat-box {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #0d0d0d;
+            min-height: 0;
+        }
+
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #333;
+        }
+
+        .message {
+            background: linear-gradient(135deg, #2d2d2d, #252525);
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: all 0.2s ease;
+        }
+
+        .message:hover {
+            background: linear-gradient(135deg, #363636, #2d2d2d);
+        }
+
+        .message strong {
+            color: #e0e0e0;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .message video {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-top: 5px;
+            border: 1px solid #333;
+        }
+
+        .message img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-top: 5px;
+            border: 1px solid #333;
+        }
+
+        .reply-indicator {
+            background-color: #2d2d2d;
+            padding: 8px 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            border-left: 3px solid #555;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+        }
+
+        .reply-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid #333;
+        }
+
+        .reply-author {
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        #message-input {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #1a1a1a;
+            border-top: 1px solid #333;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        #message-input input[type="text"] {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        #message-input input[type="file"] {
+            display: none;
+        }
+
+        #upload-btn {
+            padding: 12px 15px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #404040, #2d2d2d);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #upload-btn:hover {
+            background: linear-gradient(135deg, #4a4a4a, #363636);
+        }
+
+        #upload-btn.active {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+        }
+
+        #upload-btn.active:hover {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+
+        #message-input button {
+            padding: 12px 15px;
+            flex-shrink: 0;
+        }
+
+        #reply-preview {
+            display: none;
+            background-color: #2d2d2d;
+            padding: 10px;
+            margin: 0 15px;
+            border-radius: 6px 6px 0 0;
+            border-left: 3px solid #555;
+            position: relative;
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        #reply-preview .cancel-reply {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            color: #fff;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #settings-content {
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+        }
+        
+        .settings-field {
+            margin-bottom: 20px;
+        }
+        
+        .settings-field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .file-upload-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #404040, #2d2d2d);
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-btn:hover {
+            background: linear-gradient(135deg, #4a4a4a, #363636);
+        }
+
+        .settings-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #cancel-settings-btn {
+            background: linear-gradient(135deg, #555, #404040);
+        }
+
+        #logout-btn {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+        }
+
+        #logout-btn:hover {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        .image-preview {
+            margin-top: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #232342;
+            border-radius: 8px;
+        }
+
+        #avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        #banner-preview {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .server-list,
+        .channel-list {
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        .server-item,
+        .channel-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #2d2d2d, #252525);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+
+        .server-item:hover,
+        .channel-item:hover {
+            background: linear-gradient(135deg, #363636, #2d2d2d);
+            transform: translateY(-2px);
+            border-color: #444;
+        }
+
+        .server-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+            border: 2px solid #333;
+        }
+
+        .server-info {
+            flex-grow: 1;
+        }
+
+        .server-name {
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: #e0e0e0;
+        }
+
+        .channel-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+
+        .channel-name {
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .setup-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            #app {
+                max-height: 100%;
+                border-radius: 0;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="token-setup">
+            <h2>Enter Bot Token</h2>
+            <div class="setup-content">
+                <div class="error-message" id="token-error"></div>
+                <input type="text" id="bot-token" placeholder="Enter bot token here">
+                <button id="verify-token-btn">Login</button>
+            </div>
+        </div>
+
+        <div id="server-selection" style="display: none;">
+            <h2>Select Server</h2>
+            <div class="error-message" id="server-error"></div>
+            <div class="server-list" id="server-list"></div>
+        </div>
+
+        <div id="channel-selection" style="display: none;">
+            <h2>Select Channel</h2>
+            <div class="error-message" id="channel-error"></div>
+            <div class="channel-list" id="channel-list"></div>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-header">
+                <div>
+                    <button id="back-to-channels-btn">← Channels</button>
+                    <button id="back-to-servers-btn">← Servers</button>
+                </div>
+                <h3 id="current-channel-name">Discord Bot Client Web</h3>
+                <button id="settings-btn">⚙️ Settings</button>
+            </div>
+            <div id="chat-box"></div>
+            <div id="reply-preview">
+                <button class="cancel-reply">✕</button>
+                <div id="reply-preview-content"></div>
+            </div>
+            <div id="message-input">
+                <label for="file-input-message" id="upload-btn">📎</label>
+                <input type="file" id="file-input-message" accept="image/*,video/*">
+                <input type="text" id="message" placeholder="Type your message here...">
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="settings-modal">
+        <div id="settings-content">
+            <h2>Bot Settings</h2>
+            <div class="success-message" id="settings-success"></div>
+            <div class="error-message" id="settings-error"></div>
+            <div class="settings-field">
+                <label for="bot-username">Bot Username:</label>
+                <input type="text" id="bot-username" placeholder="New bot username">
+            </div>
+            
+            <div class="settings-field">
+                <label>Bot Avatar:</label>
+                <div id="avatar-preview" class="image-preview"></div>
+                <label for="bot-avatar-input" class="file-upload-btn" style="margin-top: 10px;">Choose Image</label>
+                <input type="file" id="bot-avatar-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="settings-field">
+                <label>Bot Banner:</label>
+                <div id="banner-preview" class="image-preview"></div>
+                <label for="bot-banner-input" class="file-upload-btn" style="margin-top: 10px;">Choose Banner</label>
+                <input type="file" id="bot-banner-input" accept="image/*" style="display: none;">
+            </div>
+            
+            <div class="settings-buttons">
+                <button id="save-settings-btn">Save Changes</button>
+                <button id="logout-btn">Logout</button>
+                <button id="cancel-settings-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://transformation-bennett-administrators-package.trycloudflare.com";
+        let sessionId = null;
+        let ws = null;
+        let replyToMessageId = null;
+        let currentBot = null;
+        let currentServer = null;
+        let currentChannel = null;
+        let displayedMessageIds = new Set();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('discordBotToken');
+            if (savedToken) {
+                document.getElementById('bot-token').value = savedToken;
+                verifyToken();
+            }
+        });
+
+        document.getElementById('verify-token-btn').addEventListener('click', verifyToken);
+        document.getElementById('bot-token').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verifyToken();
+        });
+
+        async function verifyToken() {
+            const token = document.getElementById('bot-token').value.trim();
+            const errorDiv = document.getElementById('token-error');
+            if (!token) {
+                errorDiv.textContent = 'Please enter token';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/api/verify-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    sessionId = data.sessionId;
+                    currentBot = data.bot;
+                    localStorage.setItem('discordBotToken', token);
+                    document.getElementById('token-setup').style.display = 'none';
+                    loadServers();
+                } else {
+                    errorDiv.textContent = data.message || 'Token verification failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function loadServers() {
+            const errorDiv = document.getElementById('server-error');
+            try {
+                const response = await fetch(`${API_BASE}/api/servers/${sessionId}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('server-selection').style.display = 'flex';
+                    displayServers(data.servers);
+                } else {
+                    errorDiv.textContent = data.message || 'Failed to load servers';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Failed to load servers';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function displayServers(servers) {
+            const serverList = document.getElementById('server-list');
+            serverList.innerHTML = '';
+
+            servers.forEach(server => {
+                const serverItem = document.createElement('div');
+                serverItem.className = 'server-item';
+                serverItem.addEventListener('click', () => selectServer(server));
+
+                const serverIcon = document.createElement('img');
+                serverIcon.className = 'server-icon';
+                serverIcon.src = server.icon 
+                    ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`
+                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                serverIcon.alt = server.name;
+
+                const serverInfo = document.createElement('div');
+                serverInfo.className = 'server-info';
+
+                const serverName = document.createElement('div');
+                serverName.className = 'server-name';
+                serverName.textContent = server.name;
+
+                serverInfo.appendChild(serverName);
+                serverItem.appendChild(serverIcon);
+                serverItem.appendChild(serverInfo);
+                serverList.appendChild(serverItem);
+            });
+        }
+
+        async function selectServer(server) {
+            currentServer = server;
+            const errorDiv = document.getElementById('channel-error');
+            try {
+                const response = await fetch(`${API_BASE}/api/channels/${sessionId}/${server.id}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('server-selection').style.display = 'none';
+                    document.getElementById('channel-selection').style.display = 'flex';
+                    displayChannels(data.channels);
+                } else {
+                    errorDiv.textContent = data.message || 'Failed to load channels';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Failed to load channels';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function displayChannels(channels) {
+            const channelList = document.getElementById('channel-list');
+            channelList.innerHTML = '';
+
+            const textChannels = channels.filter(ch => ch.type === 0);
+            const voiceChannels = channels.filter(ch => ch.type === 2);
+
+            if (textChannels.length > 0) {
+                textChannels.forEach(channel => {
+                    const channelItem = createChannelItem(channel, '✏️');
+                    channelList.appendChild(channelItem);
+                });
+            }
+
+            if (voiceChannels.length > 0) {
+                voiceChannels.forEach(channel => {
+                    const channelItem = createChannelItem(channel, '🔈');
+                    channelList.appendChild(channelItem);
+                });
+            }
+        }
+
+        function createChannelItem(channel, emoji) {
+            const channelItem = document.createElement('div');
+            channelItem.className = 'channel-item';
+            channelItem.addEventListener('click', () => selectChannel(channel));
+
+            const channelIcon = document.createElement('span');
+            channelIcon.className = 'channel-icon';
+            channelIcon.textContent = emoji;
+
+            const channelName = document.createElement('span');
+            channelName.className = 'channel-name';
+            channelName.textContent = channel.name;
+
+            channelItem.appendChild(channelIcon);
+            channelItem.appendChild(channelName);
+            return channelItem;
+        }
+
+        async function selectChannel(channel) {
+            currentChannel = channel;
+            const errorDiv = document.getElementById('channel-error');
+            try {
+                const response = await fetch(`${API_BASE}/api/setup-channel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId, channelId: channel.id })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('channel-selection').style.display = 'none';
+                    document.getElementById('chat-container').style.display = 'flex';
+                    document.getElementById('current-channel-name').textContent = `#${channel.name}`;
+                    displayedMessageIds.clear();
+                    connectWebSocket();
+                    loadMessages();
+                } else {
+                    errorDiv.textContent = data.message || 'Failed to setup channel';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        document.getElementById('back-to-channels-btn').addEventListener('click', () => {
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('channel-selection').style.display = 'flex';
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        });
+
+        document.getElementById('back-to-servers-btn').addEventListener('click', () => {
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('channel-selection').style.display = 'none';
+            document.getElementById('server-selection').style.display = 'flex';
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        });
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//logistics-paint-extends-funky.trycloudflare.com/ws/${sessionId}`);
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'message') displayMessage(data.data);
+            };
+        }
+
+        async function loadMessages() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '<div class="loading">Loading messages...</div>';
+            try {
+                const response = await fetch(`${API_BASE}/api/messages/${sessionId}?limit=50`);
+                const data = await response.json();
+                chatBox.innerHTML = '';
+                displayedMessageIds.clear();
+                if (data.success && data.messages.length > 0) {
+                    data.messages.reverse().forEach(msg => displayMessage(msg));
+                } else {
+                    chatBox.innerHTML = '<div class="loading">No messages yet</div>';
+                }
+            } catch (error) { console.error('Failed to load messages:', error); }
+        }
+
+        function displayMessage(msg) {
+            if (displayedMessageIds.has(msg.id)) {
+                return;
+            }
+            displayedMessageIds.add(msg.id);
+            
+            const chatBox = document.getElementById('chat-box');
+            const shouldScroll = chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 50;
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'message-container';
+            messageContainer.id = `message-${msg.id}`;
+            const avatar = document.createElement('img');
+            avatar.className = 'avatar';
+            avatar.src = msg.author.avatar ? `https://cdn.discordapp.com/avatars/${msg.author.id}/${msg.author.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            const displayName = msg.author.global_name || msg.author.username;
+            let contentHTML = `<strong>${escapeHtml(displayName)}</strong>`;
+            
+            if (msg.referenced_message) {
+                const refAuthor = msg.referenced_message.author;
+                const refDisplayName = refAuthor.global_name || refAuthor.username;
+                const refAvatar = refAuthor.avatar 
+                    ? `https://cdn.discordapp.com/avatars/${refAuthor.id}/${refAuthor.avatar}.png`
+                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                const refContent = msg.referenced_message.content || '[Attachment]';
+                const refContentShort = refContent.length > 50 ? refContent.substring(0, 50) + '...' : refContent;
+                
+                contentHTML += `
+                    <div class="reply-indicator">
+                        <img src="${refAvatar}" class="reply-avatar" alt="avatar">
+                        <span class="reply-author">${escapeHtml(refDisplayName)}</span>
+                        <span>${escapeHtml(refContentShort)}</span>
+                    </div>
+                `;
+            } else if (msg.message_reference) {
+                contentHTML += `<div class="reply-indicator">⤴️ Reply to message</div>`;
+            }
+            
+            if (msg.content) contentHTML += `<p>${escapeHtml(msg.content)}</p>`;
+            if (msg.attachments?.length > 0) {
+                msg.attachments.forEach(att => {
+                    if (att.content_type?.startsWith('image/')) {
+                        contentHTML += `<img src="${att.url}" alt="attachment">`;
+                    } else if (att.content_type?.startsWith('video/')) {
+                        contentHTML += `<video controls src="${att.url}"></video>`;
+                    }
+                });
+            }
+            messageElement.innerHTML = contentHTML;
+            messageElement.addEventListener('dblclick', () => handleReplyClick(msg.id, displayName, msg.content || '[Attachment]'));
+            messageContainer.append(avatar, messageElement);
+            chatBox.appendChild(messageContainer);
+            if (shouldScroll) chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleReplyClick(messageId, authorName, messageContent) {
+            const replyPreview = document.getElementById('reply-preview');
+            if (replyToMessageId === messageId) {
+                replyToMessageId = null;
+                replyPreview.style.display = 'none';
+            } else {
+                replyToMessageId = messageId;
+                document.getElementById('reply-preview-content').innerHTML = `<strong>Replying to ${escapeHtml(authorName)}:</strong><br>${escapeHtml(messageContent.substring(0, 100))}`;
+                replyPreview.style.display = 'block';
+            }
+        }
+        
+        document.querySelector('#reply-preview .cancel-reply').addEventListener('click', () => {
+            replyToMessageId = null;
+            document.getElementById('reply-preview').style.display = 'none';
+        });
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        document.getElementById('file-input-message').addEventListener('change', (e) => {
+            const uploadBtn = document.getElementById('upload-btn');
+            if (e.target.files.length > 0) {
+                uploadBtn.textContent = '❌';
+                uploadBtn.classList.add('active');
+            }
+        });
+
+        document.getElementById('upload-btn').addEventListener('click', (e) => {
+            const uploadBtn = e.target;
+            const fileInput = document.getElementById('file-input-message');
+            
+            if (uploadBtn.classList.contains('active')) {
+                e.preventDefault();
+                fileInput.value = '';
+                uploadBtn.textContent = '📎';
+                uploadBtn.classList.remove('active');
+            }
+        });
+        
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('message').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const fileInput = document.getElementById('file-input-message');
+            const content = messageInput.value.trim();
+            const file = fileInput.files[0];
+            if (!content && !file) return;
+            const formData = new FormData();
+            formData.append('sessionId', sessionId);
+            if (content) formData.append('content', content);
+            if (file) formData.append('file', file);
+            if (replyToMessageId) formData.append('replyToMessageId', replyToMessageId);
+            try {
+                const response = await fetch(`${API_BASE}/api/send-message`, { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    messageInput.value = '';
+                    fileInput.value = '';
+                    const uploadBtn = document.getElementById('upload-btn');
+                    uploadBtn.textContent = '📎';
+                    uploadBtn.classList.remove('active');
+                    replyToMessageId = null;
+                    document.getElementById('reply-preview').style.display = 'none';
+                } else {
+                    alert('Failed to send message: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error sending message');
+            }
+        }
+
+        function populateCurrentBotInfo() {
+            if (!currentBot) return;
+
+            const avatarPreview = document.getElementById('avatar-preview');
+            const bannerPreview = document.getElementById('banner-preview');
+            const usernameInput = document.getElementById('bot-username');
+
+            usernameInput.placeholder = currentBot.username;
+
+            if (currentBot.avatar) {
+                avatarPreview.innerHTML = `<img src="https://cdn.discordapp.com/avatars/${currentBot.id}/${currentBot.avatar}.png" alt="Current Avatar">`;
+            } else {
+                avatarPreview.innerHTML = `<img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Default Avatar">`;
+            }
+
+            if (currentBot.banner) {
+                bannerPreview.innerHTML = `<img src="https://cdn.discordapp.com/banners/${currentBot.id}/${currentBot.banner}.png?size=480" alt="Current Banner">`;
+            } else if (currentBot.banner_color) {
+                bannerPreview.innerHTML = '';
+                bannerPreview.style.backgroundColor = currentBot.banner_color;
+            } else {
+                bannerPreview.innerHTML = '';
+                bannerPreview.style.background = 'linear-gradient(45deg, #2a2a40, #1a1a2b)';
+            }
+        }
+
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            populateCurrentBotInfo();
+            document.getElementById('settings-modal').style.display = 'flex';
+            document.getElementById('settings-success').style.display = 'none';
+            document.getElementById('settings-error').style.display = 'none';
+        });
+
+        document.getElementById('cancel-settings-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('bot-username').value = '';
+            document.getElementById('bot-avatar-input').value = '';
+            document.getElementById('bot-banner-input').value = '';
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('discordBotToken');
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('channel-selection').style.display = 'none';
+            document.getElementById('server-selection').style.display = 'none';
+            document.getElementById('token-setup').style.display = 'flex';
+            document.getElementById('bot-token').value = '';
+        });
+
+        document.getElementById('bot-avatar-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('avatar-preview').innerHTML = `<img src="${event.target.result}" alt="New Avatar Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('bot-banner-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('banner-preview').innerHTML = `<img src="${event.target.result}" alt="New Banner Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        document.getElementById('save-settings-btn').addEventListener('click', async () => {
+            const username = document.getElementById('bot-username').value.trim();
+            const avatarFile = document.getElementById('bot-avatar-input').files[0];
+            const bannerFile = document.getElementById('bot-banner-input').files[0];
+
+            if (!username && !avatarFile && !bannerFile) {
+                document.getElementById('settings-error').textContent = 'No changes made.';
+                document.getElementById('settings-error').style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('sessionId', sessionId);
+            if (username) formData.append('username', username);
+            if (avatarFile) formData.append('avatar', avatarFile);
+            if (bannerFile) formData.append('banner', bannerFile);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/update-bot-settings`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('settings-success').textContent = 'Settings updated successfully!';
+                    document.getElementById('settings-success').style.display = 'block';
+                    currentBot = data.bot;
+                    setTimeout(() => {
+                        document.getElementById('settings-modal').style.display = 'none';
+                    }, 1500);
+                } else {
+                    document.getElementById('settings-error').textContent = 'Failed to update settings: ' + data.message;
+                    document.getElementById('settings-error').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('settings-error').textContent = 'Error updating settings';
+                document.getElementById('settings-error').style.display = 'block';
+            }
+        });
+
+    </script>
+</body>
+</html>
